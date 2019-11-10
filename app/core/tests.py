@@ -4,6 +4,9 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.test import Client
+from unittest.mock import patch
+from django.core.management import call_command
+from django.db.utils import OperationalError
 
 # Testing Cases for User Model ...
 
@@ -88,3 +91,25 @@ class AdminSiteTests(TestCase):
         res = self.client.get(url)
 
         self.assertEqual(res.status_code, 200)
+
+
+
+# Testing Cases for Custom management Command ...
+class CommandsTestCase(TestCase):
+
+    def test_wait_for_db_ready(self):
+        """Test waiting for db when db is available"""
+
+        with patch('django.db.utils.ConnectionHandler.__getitem__') as gi:
+            gi.return_value = True
+            call_command('Wait_DB')
+            self.assertEqual(gi.call_count, 1)
+
+    @patch('time.sleep', return_value=None)
+    def test_wait_for_db(self, ts):
+        """Test waiting for db"""
+
+        with patch('django.db.utils.ConnectionHandler.__getitem__') as gi:
+            gi.side_effect = [OperationalError] * 5 + [True]
+            call_command('Wait_DB')
+            self.assertEqual(gi.call_count, 6)
