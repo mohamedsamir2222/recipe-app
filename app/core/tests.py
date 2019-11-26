@@ -7,6 +7,7 @@ from django.test import Client
 from unittest.mock import patch
 from django.core.management import call_command
 from django.db.utils import OperationalError
+from core import models
 
 # Testing Cases for User Model ...
 
@@ -95,6 +96,7 @@ class AdminSiteTests(TestCase):
 
 
 # Testing Cases for Custom management Command ...
+
 class CommandsTestCase(TestCase):
 
     def test_wait_for_db_ready(self):
@@ -113,3 +115,17 @@ class CommandsTestCase(TestCase):
             gi.side_effect = [OperationalError] * 5 + [True]
             call_command('Wait_DB')
             self.assertEqual(gi.call_count, 6)
+
+
+# Testing Cases for Tag Model ...
+
+class TagModelTestCase(TestCase):
+
+    def test_tag_str(self):
+        """Test the tag string representation"""
+        tag = models.Tag.objects.create(
+            user=sample_user(),
+            name='Vegan'
+        )
+
+        self.assertEqual(str(tag), tag.name)
